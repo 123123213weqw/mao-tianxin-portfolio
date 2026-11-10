@@ -1036,7 +1036,11 @@ body.project-detail-mode header nav a[aria-current="page"]{border-color:#472e1f}
 .badge-printed-name{background:transparent;border:0;box-shadow:none}
 
 </style>
-<style>.view-original-link{position:fixed;left:max(14px,env(safe-area-inset-left));bottom:max(14px,env(safe-area-inset-bottom));z-index:4;padding:8px 13px;color:white;background:#242424db;border-radius:4px;font:14px sans-serif;text-decoration:none}</style></head>
+<style>.view-original-link{position:fixed;left:max(14px,env(safe-area-inset-left));bottom:max(14px,env(safe-area-inset-bottom));z-index:4;padding:8px 13px;color:white;background:#242424db;border-radius:4px;font:14px sans-serif;text-decoration:none}</style><style>
+.link-direction{display:inline-block;margin-inline-start:.35em;font-family:Arial,sans-serif;line-height:1;pointer-events:none}
+.folder-front>.link-direction,.cover-entry>.link-direction,.project-folio .expand>.link-direction{position:absolute;right:4%;bottom:7%;color:#362a1c;background:#f5ebd8;border-radius:50%;padding:.35em;z-index:3}
+[data-type-text][href]:not(:empty)::after{content:" ↗"}
+</style></head>
 <body>
 <a class="skip" href="#content">跳到主要内容</a>
 <header><a class="brand" href="#home">毛恬昕 / MAO TIANXIN</a><nav aria-label="主导航"><a href="#home">HOME</a><a href="#works">WORKS</a><a href="#about">ABOUT</a><a href="#contact">CONTACT</a></nav></header>
@@ -1191,7 +1195,7 @@ function choose(id){
  folderFronts.forEach(function(front){var active=front.dataset.folder===selected.id;front.classList.toggle('is-front',active);front.inert=!active;front.setAttribute('aria-hidden',String(!active));front.tabIndex=active?0:-1;if(active)preview=front;});
  files.querySelectorAll('button').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.id===selected.id));});
 }
-categories.slice().reverse().forEach(function(c,i){var b=document.createElement("button");b.type="button";b.className="file";b.style.setProperty("--i",i);b.dataset.id=c.id;b.setAttribute("aria-pressed","false");b.innerHTML='<span class="file-label">'+esc(c.short)+' / '+String(c.projects.length).padStart(2,'0')+'</span>';b.setAttribute('aria-label',c.name+'，'+c.projects.length+'个项目');b.title=c.name+' · '+c.projects.length+'个项目';b.addEventListener("mouseenter",function(){if(matchMedia("(hover: hover)").matches)choose(c.id);});b.addEventListener("focus",function(){choose(c.id);});b.addEventListener("click",function(){choose(c.id);});files.appendChild(b);});prepareFolderFronts();choose(selected.id);
+categories.slice().reverse().forEach(function(c,i){var b=document.createElement("button");b.type="button";b.className="file";b.style.setProperty("--i",i);b.dataset.id=c.id;b.setAttribute("aria-pressed","false");b.innerHTML='<span class="file-label">'+esc(c.short)+' / '+String(c.projects.length).padStart(2,'0')+'</span>';b.setAttribute('aria-label',c.name+'，'+c.projects.length+'个项目');b.addEventListener("click",function(){choose(c.id);});files.appendChild(b);});prepareFolderFronts();choose(selected.id);
 function openDrawer(section,open,instant){var b=section.querySelector(".drawer-toggle"),p=document.getElementById(b.getAttribute("aria-controls")),wasOpen=b.getAttribute("aria-expanded")==="true";if(instant)p.classList.add("instant");b.setAttribute("aria-expanded",String(open));p.inert=!open;p.classList.toggle("open",open);if(instant){void p.offsetHeight;p.classList.remove("instant");}if(section.id==="contact"&&!open)resetContactLetter();if(section.id==="about"){if(open&&!wasOpen)requestAnimationFrame(scheduleBadgeDrop);else if(!open){resetBadgeDrop();resetNotebookCover();}}}
 document.querySelectorAll(".drawer").forEach(function(s){s.querySelector(".drawer-toggle").addEventListener("click",function(){openDrawer(s,this.getAttribute("aria-expanded")!=="true");});});
 if("IntersectionObserver" in window){var observer=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting){openDrawer(e.target,true);observer.unobserve(e.target);}});},{threshold:0,rootMargin:"0px 0px 240px 0px"});document.querySelectorAll(".drawer").forEach(function(s){observer.observe(s);});}else{document.querySelectorAll(".drawer").forEach(function(s){openDrawer(s,true,true);});}
@@ -1561,5 +1565,28 @@ resetContactLetter();
 route(true);
 })();
 </script>
-</body>
+<script>
+(function(){
+ const selector='a[href]:not([download]):not([data-type-text]),.project-folio button.expand';
+ function mark(link){
+   if(link.querySelector('.link-direction') || /[→↗↓➜]\s*$/.test(link.textContent.trim()))return;
+   const arrow=document.createElement('span');
+   arrow.className='link-direction';arrow.setAttribute('aria-hidden','true');
+   arrow.textContent=link.target==='_blank'?'↗':'→';
+   link.append(arrow);
+ }
+ function scan(node){
+   if(node.nodeType!==1)return;
+   if(node.matches(selector))mark(node);
+   node.querySelectorAll(selector).forEach(mark);
+ }
+ scan(document.body);
+ new MutationObserver(records=>{
+   for(const r of records){
+     if(r.target.matches?.(selector))mark(r.target);
+     for(const node of r.addedNodes)scan(node);
+   }
+ }).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['href']});
+})();
+</script></body>
 </html>
