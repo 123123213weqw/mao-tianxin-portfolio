@@ -1069,6 +1069,9 @@ body.project-detail-mode header nav a[aria-current="page"]{border-color:#472e1f}
 </style><style id="navigation-arrows-v50">
 header .link-direction,.folder-top .link-direction,.project-detail-top .link-direction{display:none!important}
 header a::after,.folder-top a::after,#project-back::after{content:none!important}
+</style><style id="gsap-v52">
+.archive-motion-ready .drawer-reveal{transition-duration:.62s}
+.archive-motion-ready .contact-paper{transition:none}
 </style></head>
 <body>
 <a class="skip" href="#content">跳到主要内容</a>
@@ -1178,6 +1181,8 @@ header a::after,.folder-top a::after,#project-back::after{content:none!important
 <div id="project-view" hidden><div class="project-detail-top"><a id="project-back">← 返回项目列表</a><a href="#works">作品抽屉 ↗</a></div><div id="project-detail-content"></div><div class="project-detail-adjacent"><a id="project-previous"></a><a id="project-next"></a></div></div></main>
 <div id="resume-visual" data-viewer-title="毛恬昕 · 2027届校招简历" hidden><div class="expand-visual"><figure class="media-figure"><img loading="lazy" src="assets/resume/mao-tianxin-2027-resume-v41-page-1.png" alt="毛恬昕2027届校招简历完整页面" width="1654" height="2339"><figcaption>原始简历 · 可切换原始尺寸查看细节</figcaption></figure></div></div>
 <dialog id="viewer" aria-labelledby="viewer-title"><div class="dialog-bar"><div><p class="eyebrow">ARCHIVE / EXPANDED VIEW</p><strong id="viewer-title">展开查看</strong><p id="viewer-count" class="viewer-count"></p></div><div class="viewer-actions"><button id="viewer-zoom" type="button" hidden>原始尺寸</button><button id="native-fullscreen" type="button" aria-label="切换浏览器全屏">全屏</button><button type="button" id="close-viewer" aria-label="关闭展开查看"><span class="viewer-close-word">关闭 ×</span><span class="lightbox-close-icon" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M5 5L19 19M19 5L5 19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span></button></div></div><div class="dialog-content"></div><div class="viewer-navigation"><button id="viewer-prev" type="button">← 上一页</button><span>方向键翻页 · Esc 关闭</span><button id="viewer-next" type="button">下一页 →</button></div><p id="viewer-status" class="viewer-status" role="status"></p></dialog>
+<script src="assets/vendor/gsap-3.15.1.min.js"></script>
+<script src="assets/archive-motion-v52.js"></script>
 <script>
 (function(){
 "use strict";
@@ -1224,16 +1229,12 @@ function choose(id,reveal){
  selected=category(id);
  folderFronts.forEach(function(front){var active=front.dataset.folder===selected.id;front.classList.toggle('is-front',active);front.inert=!active;front.setAttribute('aria-hidden',String(!active));front.tabIndex=active?0:-1;if(active)preview=front;});
  files.querySelectorAll('button').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.id===selected.id));b.setAttribute('aria-expanded',String(b.dataset.id===selected.id));});
- if(reveal && !matchMedia('(prefers-reduced-motion: reduce)').matches){
-  preview.getAnimations().forEach(function(animation){animation.cancel();});
-  preview.animate([
-   {opacity:0,transform:'translateY(-48px) rotate(-3deg) scale(.97)'},
-   {opacity:1,transform:'translateY(0) rotate(-3deg) scale(1)'}
-  ],{duration:420,easing:'cubic-bezier(.2,.7,.25,1)'});
- }
+ if(window.ArchiveMotion)ArchiveMotion.stop('folder');
+ if(reveal && window.ArchiveMotion)ArchiveMotion.folder(preview);
+
 }
 categories.slice().reverse().forEach(function(c,i){var b=document.createElement("button");b.type="button";b.className="file";b.style.setProperty("--i",i);b.dataset.id=c.id;b.setAttribute("aria-pressed","false");b.innerHTML='<span class="file-label">'+esc(c.short)+' / '+String(c.projects.length).padStart(2,'0')+'</span>';b.setAttribute('aria-label',c.name+'，'+c.projects.length+'个项目');b.setAttribute("aria-controls",c.id===categories[0].id?"preview":"preview-"+c.id);b.addEventListener("click",function(){choose(c.id,true);});files.appendChild(b);});prepareFolderFronts();choose(selected.id);
-function openDrawer(section,open,instant){var b=section.querySelector(".drawer-toggle"),p=document.getElementById(b.getAttribute("aria-controls")),wasOpen=b.getAttribute("aria-expanded")==="true";if(instant)p.classList.add("instant");b.setAttribute("aria-expanded",String(open));p.inert=!open;p.classList.toggle("open",open);if(instant){void p.offsetHeight;p.classList.remove("instant");}if(section.id==="contact"&&!open)resetContactLetter();if(section.id==="about"){if(open&&!wasOpen)requestAnimationFrame(scheduleBadgeDrop);else if(!open){resetBadgeDrop();resetNotebookCover();}}}
+function openDrawer(section,open,instant){var b=section.querySelector(".drawer-toggle"),p=document.getElementById(b.getAttribute("aria-controls")),wasOpen=b.getAttribute("aria-expanded")==="true";if(instant)p.classList.add("instant");b.setAttribute("aria-expanded",String(open));p.inert=!open;p.classList.toggle("open",open);if(instant){void p.offsetHeight;p.classList.remove("instant");}if(window.ArchiveMotion)ArchiveMotion.drawer(section,open,instant);if(section.id==="contact"&&!open)resetContactLetter();if(section.id==="about"){if(open&&!wasOpen)requestAnimationFrame(scheduleBadgeDrop);else if(!open){resetBadgeDrop();resetNotebookCover();}}}
 document.querySelectorAll(".drawer").forEach(function(s){s.querySelector(".drawer-toggle").addEventListener("click",function(){openDrawer(s,this.getAttribute("aria-expanded")!=="true");});});
 
 function placeholder(code,title){return '<div data-asset-ratio="16:9" class="archive-visual theme-'+esc(selected.id)+'"><span class="eyebrow">'+esc(code)+'</span><strong class="archive-code">'+esc(selected.short)+'</strong><p>'+esc(title)+'</p><span class="asset-label">16:9 · 原始作品图待接入</span></div>';}
@@ -1364,6 +1365,7 @@ function buildProjectDetail(record){
  document.getElementById('project-detail-content').innerHTML=project.cases?commercialDetailLayout(project,c):'<div class="project-detail-layout'+(project.layout==='flow-originals'?' flow-detail-layout':'')+'"><aside class="project-detail-summary"><p class="detail-number">PROJECT '+projectOrdinal(project)+' / '+esc(c.short)+'</p><h1>'+esc(project.title)+'</h1><p class="detail-kind">'+esc(c.name)+' / '+esc(project.kind)+'</p><p class="detail-description">'+esc(project.summary)+'</p><ul class="project-keywords">'+project.tags.map(function(tag){return '<li>'+esc(tag)+'</li>';}).join('')+'</ul></aside>'+(project.layout==='flow-originals'?flowOriginalLayout(project):project.layout==='photo-originals'?photoOriginalLayout(project):project.layout==='brand-originals'?brandOriginalLayout(project):project.layout==='bobo-originals'?boboOriginalLayout(project):project.layout==='fashion-originals'?fashionOriginalLayout(project):project.layout==='nanxi-originals'?nanxiOriginalLayout(project):project.layout==='rodin-originals'?rodinOriginalLayout(project):project.layout==='aimwise-originals'?aimwiseOriginalLayout(project):project.layout==='dabeilu-originals'?dabeiluOriginalLayout(project):'<div class="detail-media-stack">'+project.assets.map(function(asset,i){return '<section class="detail-asset"><div class="detail-asset-heading"><span>'+String(i+1).padStart(2,'0')+' / '+String(project.assets.length).padStart(2,'0')+'</span><h2>'+esc(asset.title)+'</h2></div>'+projectMediaBlock(project,asset,i)+'</section>';}).join('')+'</div>')+'</div>';
  document.querySelector('#project-detail-content .project-detail-summary').prepend(backLink);
  var previous=all[index-1],next=all[(index+1)%all.length],prevLink=document.getElementById('project-previous');prevLink.hidden=!previous;if(previous){prevLink.href='#project/'+previous.number;prevLink.textContent='← '+previous.title;}document.getElementById('project-next').href='#project/'+next.number;document.getElementById('project-next').textContent=next.title+' →';syncWorkMediaFrames(document.getElementById('project-detail-content'));
+ if(window.ArchiveMotion)ArchiveMotion.detail(document.getElementById('project-detail-content'));
 }
 document.getElementById('project-detail-content').addEventListener('click',function(e){var caseStep=e.target.closest('[data-commercial-step]');if(caseStep){switchCommercialCase(Number(caseStep.dataset.commercialStep),'detail');return;}var choice=e.target.closest('[data-dress-choice]');if(choice){var record=projectRecord('08'),option=record.project.outfitSelector.options.find(function(option){return option.id===choice.dataset.dressChoice;});if(!option)return;var widget=choice.closest('.dress-selector'),image=widget.querySelector('.dress-model'),showcase=widget.querySelector('.dress-showcase');widget.dataset.dressActive=option.id;widget.querySelectorAll('[data-dress-choice]').forEach(function(button){button.setAttribute('aria-pressed',String(button===choice));});image.removeAttribute('srcset');if(previewSets[option.src])image.srcset=previewSets[option.src];image.src=option.src;image.alt=option.label+'完整人物透明抠图';showcase.dataset.viewerTitle=record.project.title+' / '+option.label;showcase.setAttribute('aria-label','放大查看：'+option.label);widget.querySelector('.dress-current').textContent=option.label;if(!reduced.matches&&image.animate){image.getAnimations().forEach(function(animation){animation.cancel();});image.animate([{opacity:.25,transform:'translateY(12px) scale(.985)'},{opacity:1,transform:'translateY(0) scale(1)'}],{duration:280,easing:'cubic-bezier(.16,1,.3,1)'});}return;}var button=e.target.closest('.expand');if(!button)return;activeGallery=Array.from(this.querySelectorAll('.expand'));viewerContext='项目详情';showGallery(activeGallery.indexOf(button));document.body.classList.add('viewer-open');viewer.showModal();});
 function updateNextProjectPeek(){
@@ -1382,6 +1384,7 @@ function updateNextProjectPeek(){
  var label=projectOrdinal(nextProject)+' / '+nextProject.title;
  if(cue.textContent!==label){
   cue.textContent=label;
+  if(window.ArchiveMotion&&!cue.hidden)ArchiveMotion.peek(cue);
   cue.setAttribute('aria-label','向下浏览下一个项目：'+nextProject.title);
  }
 
@@ -1407,7 +1410,7 @@ document.addEventListener('click',function(e){var button=e.target.closest('[data
 function setActiveNav(key){document.querySelectorAll("nav a").forEach(function(a){if(a.getAttribute("href")==="#"+key)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current");});}
 function jumpTo(target,instant){var h=document.querySelector("header").getBoundingClientRect().height;var y=target.getBoundingClientRect().top+window.scrollY-h;window.scrollTo({top:Math.max(0,y),behavior:instant||reduced.matches?"instant":"smooth"});}
 function route(force){
- var currentHash=location.hash||'#home';if(!force&&currentHash===renderedHash)return;renderedHash=currentHash;cancelCommercialTransitions();var currentToken=++routeToken,key=currentHash.slice(1),isFolder=key.indexOf('folder/')===0,isProject=key.indexOf('project/')===0,oldKind=viewKind;
+ var currentHash=location.hash||'#home';if(!force&&currentHash===renderedHash)return;renderedHash=currentHash;cancelCommercialTransitions();if(window.ArchiveMotion)ArchiveMotion.reset();var currentToken=++routeToken,key=currentHash.slice(1),isFolder=key.indexOf('folder/')===0,isProject=key.indexOf('project/')===0,oldKind=viewKind;
  if(viewer.open)viewer.close();if(oldKind==='folder')folderPositions[selected.id]=window.scrollY;
  if(isProject){var record=projectRecord(key.slice(8));if(record&&record.project.overviewOnly){history.replaceState({},'','#folder/'+record.category.id);renderedHash='';route(true);requestAnimationFrame(function(){scrollToProject(record.project.number);});return;}if(record){if(oldKind==='home')homeY=window.scrollY;choose(record.category.id);home.hidden=true;folder.hidden=true;projectView.hidden=false;var peek=document.getElementById('next-project-peek');if(peek)peek.hidden=true;previousFolder=true;viewKind='project';document.body.classList.add('project-detail-mode');buildProjectDetail(record);document.title=(record.project.cases?record.project.cases[commercialCaseIndex].title:record.project.title)+' · 毛恬昕';setActiveNav('works');window.scrollTo({top:0,behavior:'instant'});return;}key='works';isFolder=false;}
  projectView.hidden=true;var peek=document.getElementById('next-project-peek');if(peek)peek.hidden=true;document.body.classList.remove('project-detail-mode');
@@ -1423,6 +1426,7 @@ function showGallery(index){galleryIndex=Math.max(0,Math.min(index,activeGallery
 var original=visual.querySelector("img");
 if(original){original.removeAttribute("srcset");original.removeAttribute("sizes");original.loading="eager";}
 viewer.querySelector(".dialog-content").replaceChildren(visual);
+if(window.ArchiveMotion)ArchiveMotion.gallery(visual);
 var originalLink=viewer.querySelector(".view-original-link");
 if(originalLink)originalLink.remove();
 if(original && viewerContext==="项目详情"){
@@ -1604,12 +1608,13 @@ var contactProfile={"redbookId": "6364088696", "redbookUrl": "https://xhslink.cn
 var contactFeedSlot=document.querySelector('.paper-feed-slot');
 var contactTitle=document.getElementById('print-trigger-title'),contactCaption=document.getElementById('print-trigger-caption'),contactStatus=document.getElementById('contact-status'),contactQRs=Array.from(document.querySelectorAll('#contact-letter .printed-qr')),wechatDialog=document.getElementById('wechat-dialog');
 function contactPrintState(state){contactStage.dataset.printState=state;contactStage.setAttribute('aria-busy',String((state==='feeding'||state==='printing')));contactTrigger.disabled=(state==='feeding'||state==='printing');contactTitle.textContent=(state==='feeding'||state==='printing')?'PRINTING':state==='printed'?'REPRINT':'PRINT';contactCaption.textContent=(state==='feeding'||state==='printing')?'正在打印…':state==='printed'?'再打一次':'轻点，打印联系方式';}
-function resetContactLetter(){contactPrintRun++;contactFeedSlot.setAttribute('aria-hidden','true');contactParts.forEach(function(p){p.classList.remove('is-inked');p.inert=true;p.setAttribute('aria-hidden','true');});document.querySelectorAll('#contact-letter [data-type-text]').forEach(function(x){x.textContent='';});contactQRs.forEach(function(qr){qr.classList.remove('is-scanning','is-printed');});contactPaper.style.setProperty('--paper-feed','14px');contactStatus.textContent='';contactPrintState('idle');}
+function resetContactLetter(){if(window.ArchiveMotion)ArchiveMotion.stop('paper');contactPrintRun++;contactFeedSlot.setAttribute('aria-hidden','true');contactParts.forEach(function(p){p.classList.remove('is-inked');p.inert=true;p.setAttribute('aria-hidden','true');});document.querySelectorAll('#contact-letter [data-type-text]').forEach(function(x){x.textContent='';});contactQRs.forEach(function(qr){qr.classList.remove('is-scanning','is-printed');});contactPaper.style.setProperty('--paper-feed','14px');contactStatus.textContent='';contactPrintState('idle');}
 function contactDelay(ms){return new Promise(function(resolve){setTimeout(resolve,ms);});}
 async function printContactLetter(){
  if(['feeding','printing'].includes(contactStage.dataset.printState))return;
  resetContactLetter();var run=contactPrintRun;
  contactFeedSlot.setAttribute('aria-hidden','false');contactPrintState('feeding');
+ if(window.ArchiveMotion)ArchiveMotion.feed(contactPaper);
  contactStatus.textContent='正在送入纸张。';
  if(!reduced.matches)await contactDelay(700);
  if(run!==contactPrintRun)return;
