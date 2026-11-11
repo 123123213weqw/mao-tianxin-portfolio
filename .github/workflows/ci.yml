@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 校验资源引用完整性
+        run: |
+          python3 - <<'PY'
+          import pathlib, re, sys
+          html = pathlib.Path("index.html").read_text(encoding="utf-8")
+          refs = sorted(set(re.findall(r"assets/[A-Za-z0-9_./-]+\.[A-Za-z0-9]+", html)))
+          missing = [r for r in refs if not pathlib.Path(r).is_file()]
+          print(f"index.html 引用 {len(refs)} 个资源文件")
+          if missing:
+              print("以下引用缺失对应文件:")
+              for r in missing: print("  -", r)
+              sys.exit(1)
+          print("全部存在")
+          PY
+
+      - name: 体积体检
+        run: |
+          size=$(stat -c%s index.html)
+          echo "index.html: $((size/1024)) KB"
+          if [ "$size" -ge 2000000 ]; then
+            echo "::error::index.html 超过 2MB——请先运行 scripts/optimize-site.sh 抽出内嵌图片"
+            exit 1
+          fi
+          echo "体积达标(<2MB)"
