@@ -1069,9 +1069,6 @@ body.project-detail-mode header nav a[aria-current="page"]{border-color:#472e1f}
 </style><style id="navigation-arrows-v50">
 header .link-direction,.folder-top .link-direction,.project-detail-top .link-direction{display:none!important}
 header a::after,.folder-top a::after,#project-back::after{content:none!important}
-</style><style id="gsap-v52">
-.archive-motion-ready .drawer-reveal{transition-duration:.62s}
-.archive-motion-ready .contact-paper{transition:none}
 </style></head>
 <body>
 <a class="skip" href="#content">跳到主要内容</a>
@@ -1181,8 +1178,8 @@ header a::after,.folder-top a::after,#project-back::after{content:none!important
 <div id="project-view" hidden><div class="project-detail-top"><a id="project-back">← 返回项目列表</a><a href="#works">作品抽屉 ↗</a></div><div id="project-detail-content"></div><div class="project-detail-adjacent"><a id="project-previous"></a><a id="project-next"></a></div></div></main>
 <div id="resume-visual" data-viewer-title="毛恬昕 · 2027届校招简历" hidden><div class="expand-visual"><figure class="media-figure"><img loading="lazy" src="assets/resume/mao-tianxin-2027-resume-v41-page-1.png" alt="毛恬昕2027届校招简历完整页面" width="1654" height="2339"><figcaption>原始简历 · 可切换原始尺寸查看细节</figcaption></figure></div></div>
 <dialog id="viewer" aria-labelledby="viewer-title"><div class="dialog-bar"><div><p class="eyebrow">ARCHIVE / EXPANDED VIEW</p><strong id="viewer-title">展开查看</strong><p id="viewer-count" class="viewer-count"></p></div><div class="viewer-actions"><button id="viewer-zoom" type="button" hidden>原始尺寸</button><button id="native-fullscreen" type="button" aria-label="切换浏览器全屏">全屏</button><button type="button" id="close-viewer" aria-label="关闭展开查看"><span class="viewer-close-word">关闭 ×</span><span class="lightbox-close-icon" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M5 5L19 19M19 5L5 19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span></button></div></div><div class="dialog-content"></div><div class="viewer-navigation"><button id="viewer-prev" type="button">← 上一页</button><span>方向键翻页 · Esc 关闭</span><button id="viewer-next" type="button">下一页 →</button></div><p id="viewer-status" class="viewer-status" role="status"></p></dialog>
-<script src="assets/vendor/gsap-3.15.1.min.js"></script>
-<script src="assets/archive-motion-v52.js"></script>
+<script defer src="assets/vendor/gsap-3.15.1.min.js"></script>
+<script defer src="assets/archive-motion-v53.js"></script>
 <script>
 (function(){
 "use strict";
@@ -1234,7 +1231,7 @@ function choose(id,reveal){
 
 }
 categories.slice().reverse().forEach(function(c,i){var b=document.createElement("button");b.type="button";b.className="file";b.style.setProperty("--i",i);b.dataset.id=c.id;b.setAttribute("aria-pressed","false");b.innerHTML='<span class="file-label">'+esc(c.short)+' / '+String(c.projects.length).padStart(2,'0')+'</span>';b.setAttribute('aria-label',c.name+'，'+c.projects.length+'个项目');b.setAttribute("aria-controls",c.id===categories[0].id?"preview":"preview-"+c.id);b.addEventListener("click",function(){choose(c.id,true);});files.appendChild(b);});prepareFolderFronts();choose(selected.id);
-function openDrawer(section,open,instant){var b=section.querySelector(".drawer-toggle"),p=document.getElementById(b.getAttribute("aria-controls")),wasOpen=b.getAttribute("aria-expanded")==="true";if(instant)p.classList.add("instant");b.setAttribute("aria-expanded",String(open));p.inert=!open;p.classList.toggle("open",open);if(instant){void p.offsetHeight;p.classList.remove("instant");}if(window.ArchiveMotion)ArchiveMotion.drawer(section,open,instant);if(section.id==="contact"&&!open)resetContactLetter();if(section.id==="about"){if(open&&!wasOpen)requestAnimationFrame(scheduleBadgeDrop);else if(!open){resetBadgeDrop();resetNotebookCover();}}}
+function openDrawer(section,open,instant){var b=section.querySelector(".drawer-toggle"),p=document.getElementById(b.getAttribute("aria-controls")),wasOpen=b.getAttribute("aria-expanded")==="true";if(instant)p.classList.add("instant");b.setAttribute("aria-expanded",String(open));p.inert=!open;p.classList.toggle("open",open);if(instant){void p.offsetHeight;p.classList.remove("instant");}if(section.id==="contact"&&!open)resetContactLetter();if(section.id==="about"){if(open&&!wasOpen)requestAnimationFrame(scheduleBadgeDrop);else if(!open){resetBadgeDrop();resetNotebookCover();}}}
 document.querySelectorAll(".drawer").forEach(function(s){s.querySelector(".drawer-toggle").addEventListener("click",function(){openDrawer(s,this.getAttribute("aria-expanded")!=="true");});});
 
 function placeholder(code,title){return '<div data-asset-ratio="16:9" class="archive-visual theme-'+esc(selected.id)+'"><span class="eyebrow">'+esc(code)+'</span><strong class="archive-code">'+esc(selected.short)+'</strong><p>'+esc(title)+'</p><span class="asset-label">16:9 · 原始作品图待接入</span></div>';}
@@ -1608,13 +1605,13 @@ var contactProfile={"redbookId": "6364088696", "redbookUrl": "https://xhslink.cn
 var contactFeedSlot=document.querySelector('.paper-feed-slot');
 var contactTitle=document.getElementById('print-trigger-title'),contactCaption=document.getElementById('print-trigger-caption'),contactStatus=document.getElementById('contact-status'),contactQRs=Array.from(document.querySelectorAll('#contact-letter .printed-qr')),wechatDialog=document.getElementById('wechat-dialog');
 function contactPrintState(state){contactStage.dataset.printState=state;contactStage.setAttribute('aria-busy',String((state==='feeding'||state==='printing')));contactTrigger.disabled=(state==='feeding'||state==='printing');contactTitle.textContent=(state==='feeding'||state==='printing')?'PRINTING':state==='printed'?'REPRINT':'PRINT';contactCaption.textContent=(state==='feeding'||state==='printing')?'正在打印…':state==='printed'?'再打一次':'轻点，打印联系方式';}
-function resetContactLetter(){if(window.ArchiveMotion)ArchiveMotion.stop('paper');contactPrintRun++;contactFeedSlot.setAttribute('aria-hidden','true');contactParts.forEach(function(p){p.classList.remove('is-inked');p.inert=true;p.setAttribute('aria-hidden','true');});document.querySelectorAll('#contact-letter [data-type-text]').forEach(function(x){x.textContent='';});contactQRs.forEach(function(qr){qr.classList.remove('is-scanning','is-printed');});contactPaper.style.setProperty('--paper-feed','14px');contactStatus.textContent='';contactPrintState('idle');}
+function resetContactLetter(){contactPrintRun++;contactFeedSlot.setAttribute('aria-hidden','true');contactParts.forEach(function(p){p.classList.remove('is-inked');p.inert=true;p.setAttribute('aria-hidden','true');});document.querySelectorAll('#contact-letter [data-type-text]').forEach(function(x){x.textContent='';});contactQRs.forEach(function(qr){qr.classList.remove('is-scanning','is-printed');});contactPaper.style.setProperty('--paper-feed','14px');contactStatus.textContent='';contactPrintState('idle');}
 function contactDelay(ms){return new Promise(function(resolve){setTimeout(resolve,ms);});}
 async function printContactLetter(){
  if(['feeding','printing'].includes(contactStage.dataset.printState))return;
  resetContactLetter();var run=contactPrintRun;
  contactFeedSlot.setAttribute('aria-hidden','false');contactPrintState('feeding');
- if(window.ArchiveMotion)ArchiveMotion.feed(contactPaper);
+
  contactStatus.textContent='正在送入纸张。';
  if(!reduced.matches)await contactDelay(700);
  if(run!==contactPrintRun)return;
