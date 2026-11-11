@@ -1066,6 +1066,9 @@ body.project-detail-mode header nav a[aria-current="page"]{border-color:#472e1f}
 @media(max-width:1100px){.paper-feed-slot{--sheet-height:660px}}
 @media(max-width:600px){.paper-feed-slot{--sheet-height:610px}.next-project-peek{font-size:11px;width:78vw}}
 @media(prefers-reduced-motion:reduce){.paper-feed-slot{transition:none}}
+</style><style id="navigation-arrows-v50">
+header .link-direction,.folder-top .link-direction,.project-detail-top .link-direction{display:none!important}
+header a::after,.folder-top a::after,#project-back::after{content:none!important}
 </style></head>
 <body>
 <a class="skip" href="#content">跳到主要内容</a>
@@ -1626,6 +1629,7 @@ route(true);
 (function(){
  const selector='.folder-front[href],.view-project-link[href],.vibe-project-link[href],.commercial-video-link[href],.project-folio button.expand';
  function mark(link){
+   if(link.closest('header,.folder-top,.project-detail-top'))return;
    if(link.querySelector('.link-direction') || /[→↗↓➜]\s*$/.test(link.textContent.trim()))return;
    const arrow=document.createElement('span');
    arrow.className='link-direction';arrow.setAttribute('aria-hidden','true');
