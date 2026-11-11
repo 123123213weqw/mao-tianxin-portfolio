@@ -1055,7 +1055,7 @@ body.project-detail-mode header nav a[aria-current="page"]{border-color:#472e1f}
  .workspace .folder-front{margin:0 1%;padding:17px}
  .workspace .folder-front .preview-paper{min-height:270px}
 }
-</style><style id="guidance-v49">
+</style><style id="guidance-v49" data-peek-version="v51">
 .next-project-peek{position:fixed;bottom:0;right:5%;z-index:30;width:min(450px,64vw);padding:14px 28px 10px 18px;background:#f0d873;color:#35261c;text-align:left;font:600 13px/1.4 var(--sans);clip-path:polygon(0 0,92% 0,100% 100%,0 100%);border-radius:8px 0 0 0;box-shadow:0 -4px 14px #25180d26;cursor:pointer}
 .next-project-peek[hidden]{display:none}
 .paper-feed-slot{--sheet-height:680px;position:relative;height:0;overflow:hidden;transition:height .65s cubic-bezier(.22,.68,.3,1)}
@@ -1369,8 +1369,22 @@ document.getElementById('project-detail-content').addEventListener('click',funct
 function updateNextProjectPeek(){
  var cue=document.getElementById('next-project-peek');
  if(!cue)return;
- var next=stackCards[1];
- cue.hidden=folder.hidden||!next||next.getBoundingClientRect().top<=innerHeight-44;
+ if(folder.hidden){cue.hidden=true;return;}
+ var currentIndex=0;
+ stackCards.forEach(function(card,index){
+  if(card.getBoundingClientRect().top<=parseFloat(getComputedStyle(card).top)+2)currentIndex=index;
+ });
+ var next=stackCards[currentIndex+1];
+ cue.hidden=!next||next.getBoundingClientRect().top<=innerHeight-44;
+ if(!next)return;
+ var nextProject=selected.projects[currentIndex+1];
+ cue.dataset.nextProject=nextProject.number;
+ var label=projectOrdinal(nextProject)+' / '+nextProject.title;
+ if(cue.textContent!==label){
+  cue.textContent=label;
+  cue.setAttribute('aria-label','向下浏览下一个项目：'+nextProject.title);
+ }
+
 }
 function buildFolder(){
  document.getElementById('folder-switcher').innerHTML=categories.map(function(c){return '<a href="#folder/'+c.id+'"'+(c.id===selected.id?' aria-current="page"':'')+'>'+esc(c.short)+'</a>';}).join('');
@@ -1382,7 +1396,8 @@ function buildFolder(){
   cue.id='next-project-peek';cue.className='next-project-peek';cue.type='button';
   cue.textContent=projectOrdinal(nextProject)+' / '+nextProject.title;
   cue.setAttribute('aria-label','向下浏览下一个项目：'+nextProject.title);
-  cue.addEventListener('click',function(){scrollToProject(nextProject.number);});
+  cue.dataset.nextProject=nextProject.number;
+  cue.addEventListener('click',function(){scrollToProject(cue.dataset.nextProject);});
   folder.appendChild(cue);
  }
 
